@@ -1,23 +1,48 @@
+
 name: Build APK
+
 on:
   push:
   workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - run: unzip -q VANX-GAME-BOOSTER.zip
-      - uses: actions/setup-java@v4
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Extract project ZIP
+        run: |
+          unzip -o VANX-GAME-BOOSTER.zip
+          echo "=== Folder structure ==="
+          ls -la
+          ls -la VANX || true
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: 8.7
-      - run: gradle assembleDebug
+          gradle-version: '8.7'
+
+      - name: Build Debug APK
         working-directory: VANX
-      - uses: actions/upload-artifact@v4
+        run: gradle assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: VANX-APK
           path: VANX/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          
